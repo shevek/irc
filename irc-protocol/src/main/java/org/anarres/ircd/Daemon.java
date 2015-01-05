@@ -1,145 +1,140 @@
 package org.anarres.ircd;
 
 import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 /** An IRC daemon object. */
 public class Daemon {
-	private String				name;
-	private Date				created;
 
-	private List<Listener>		listeners;
+    private String name;
+    private final Date created;
 
-	private Map<String,Server>	servers;
-	private Map<String,Client>	clients;
-	private Map<String,Channel>	channels;
+    private final List<Listener> listeners;
 
-	public Daemon() {
-		this.name = "irc.anarres.org";
-		this.created = new Date();
-		this.listeners = new ArrayList<Listener>();
-		this.servers = new HashMap<String,Server>();
-		this.clients = new HashMap<String,Client>();
-		this.channels = new HashMap<String,Channel>();
-	}
+    private final Map<String, Server> servers;
+    private final Map<String, Client> clients;
+    private final Map<String, Channel> channels;
 
-	/** Returns the name (hostname) of this daemon. */
-	public String getName() {
-		return name;
-	}
+    public Daemon() {
+        this.name = "irc.anarres.org";
+        this.created = new Date();
+        this.listeners = new ArrayList<Listener>();
+        this.servers = new HashMap<String, Server>();
+        this.clients = new HashMap<String, Client>();
+        this.channels = new HashMap<String, Channel>();
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    /** Returns the name (hostname) of this daemon. */
+    public String getName() {
+        return name;
+    }
 
-	/** Returns the version of this daemon. */
-	public String getVersion() {
-		return "Spircle-" + Version.getVersion();
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	/** Returns the date at which this daemon was created. */
-	public String getCreated() {
-		return String.valueOf(created);
-	}
+    /** Returns the version of this daemon. */
+    public String getVersion() {
+        return "Spircle-" + Version.getVersion();
+    }
 
-/* Networking */
+    /** Returns the date at which this daemon was created. */
+    public String getCreated() {
+        return String.valueOf(created);
+    }
 
-	/** Adds a network listener to this daemon. */
-	public void addListener(Listener l) {
-		listeners.add(l);
-	}
+    /* Networking */
+    /** Adds a network listener to this daemon. */
+    public void addListener(Listener l) {
+        listeners.add(l);
+    }
 
-/* Servers */
+    /* Servers */
+    public Server getServer(String name) {
+        return servers.get(name);
+    }
 
-	public Server getServer(String name) {
-		return servers.get(name);
-	}
+    public void addServer(Server server) {
+        String name = server.getName();
+        servers.put(name, server);
+    }
 
-	public void addServer(Server server) {
-		String	name = server.getName();
-		servers.put(name, server);
-	}
+    public void removeServer(Server server) {
+        servers.remove(server.getName());
+    }
 
-	public void removeServer(Server server) {
-		servers.remove(server.getName());
-	}
+    /* Clients */
+    public Client getClient(String nick) {
+        return clients.get(nick);
+    }
 
-/* Clients */
+    public boolean addClient(String nick, Client client) {
+        assert nick != null : "Cannot add client without nick";
+        if (clients.containsKey(nick))
+            return false;
+        clients.put(nick, client);
+        return true;
+    }
 
-	public Client getClient(String nick) {
-		return clients.get(nick);
-	}
+    public boolean addClient(Client client) {
+        return addClient(client.getNick(), client);
+    }
 
-	public boolean addClient(String nick, Client client) {
-		assert nick != null : "Cannot add client without nick";
-		if (clients.containsKey(nick))
-			return false;
-		clients.put(nick, client);
-		return true;
-	}
+    public void removeClient(String nick) {
+        clients.remove(nick);
+    }
 
-	public boolean addClient(Client client) {
-		return addClient(client.getNick(), client);
-	}
+    public void removeClient(Client client) {
+        removeClient(client.getNick());
+    }
 
-	public void removeClient(String nick) {
-		clients.remove(nick);
-	}
+    /* Channels */
+    public Channel getChannel(String name, boolean create) {
+        Channel c = channels.get(name);
+        if (c != null)
+            return c;
+        if (!create)
+            return null;
+        c = new Channel(this, name);
+        addChannel(c);
+        return c;
+    }
 
-	public void removeClient(Client client) {
-		removeClient(client.getNick());
-	}
+    public Channel getChannel(String name) {
+        return channels.get(name);
+    }
 
-/* Channels */
+    public void addChannel(Channel channel) {
+        channels.put(channel.getName(), channel);
+    }
 
-	public Channel getChannel(String name, boolean create) {
-		Channel	c = channels.get(name);
-		if (c != null)
-			return c;
-		if (!create)
-			return null;
-		c = new Channel(this, name);
-		addChannel(c);
-		return c;
-	}
+    public void removeChannel(Channel channel) {
+        channels.remove(channel.getName());
+    }
 
-	public Channel getChannel(String name) {
-		return channels.get(name);
-	}
+    /* Events */
+    public void start()
+            throws IOException {
+        for (Listener l : listeners)
+            l.start(this);
+    }
 
-	public void addChannel(Channel channel) {
-		channels.put(channel.getName(), channel);
-	}
+    public void stop() {
+        for (Listener l : listeners)
+            l.stop();
+    }
 
-	public void removeChannel(Channel channel) {
-		channels.remove(channel.getName());
-	}
-
-/* Events */
-
-	public void start()
-						throws IOException {
-		for (Listener l : listeners)
-			l.start(this);
-	}
-
-	public void stop() {
-		for (Listener l : listeners)
-			l.stop();
-	}
-
-	public String toString() {
-		return "Daemon(" +
-			"servers=" + servers.keySet() +
-			", clients=" + clients.keySet() +
-			", channels=" + channels.keySet() +
-			")";
-	}
+    @Override
+    public String toString() {
+        return "Daemon("
+                + "servers=" + servers.keySet()
+                + ", clients=" + clients.keySet()
+                + ", channels=" + channels.keySet()
+                + ")";
+    }
 
 }
