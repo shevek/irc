@@ -1,0 +1,2 @@
+rootProject.name='irc'
+include 'irc-protocol','irc-server-mina', 'irc-server-netty'

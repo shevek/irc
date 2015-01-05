@@ -1,0 +1,51 @@
+ext.githubProjectName = rootProject.name
+
+buildscript {
+	apply from: file('gradle/buildscript.gradle'), to: buildscript
+}
+
+apply from: file('gradle/convention.gradle')
+apply from: file('gradle/github.gradle')
+// apply from: file('gradle/maven.gradle')
+apply from: file('gradle/nexus.gradle')
+apply from: file('gradle/check.gradle')
+apply from: file('gradle/license.gradle')
+
+subprojects {
+	group = "org.anarres.irc"
+}
+
+project(':irc-protocol') {
+	dependencies {
+		compile 'com.google.guava:guava:18.0'
+		// TODO: Remove in favour of Pattern
+		compile 'oro:oro:2.0.8'
+		// TODO: Split into mina submodule
+		compile 'org.apache.mina:mina-core:2.0.9'
+		compile 'org.apache.mina:mina-integration-jmx:2.0.9'
+
+		testCompile 'commons-net:commons-net:3.3'
+	}
+}
+
+project(':irc-server-mina') {
+	dependencies {
+		compile project(':irc-protocol')
+		compile 'org.apache.mina:mina-core:2.0.9'
+
+		testCompile 'commons-net:commons-net:3.3'
+		testCompile project(':irc-protocol').sourceSets.test.output
+	}
+}
+
+project(':irc-server-netty') {
+	dependencies {
+		compile project(':irc-protocol')
+		compile 'io.netty:netty-all:4.0.23.Final'
+
+		testCompile 'commons-net:commons-net:3.3'
+		testCompile project(':irc-protocol').sourceSets.test.output
+
+		testRuntime 'org.javassist:javassist:3.18.2-GA'
+	}
+}
