@@ -1,12 +1,8 @@
-tftp4j
-======
+irc
+====
 
-A Java TFTP server and protocol handler.
+A Java IRC server and protocol handler.
 
-This code originally came from a variety of third party open source
-projects, and the objective is to give it a complete overhaul into
-a modern, correct and complete TFTP implementation.
-
-The [JavaDoc API](http://shevek.github.io/tftp4j/docs/javadoc/)
+The [JavaDoc API](http://shevek.github.io/irc/docs/javadoc/)
 is available.
 
